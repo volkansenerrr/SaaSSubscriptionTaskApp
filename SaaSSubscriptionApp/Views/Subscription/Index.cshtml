@@ -1,0 +1,68 @@
+﻿@{
+    ViewData["Title"] = "Subscription";
+}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<h2>Abonelik Seçimi</h2>
+
+<select id="plan" class="form-control"></select>
+
+<br />
+
+<div>
+    <label><input type="checkbox" class="feature" value="1" /> Ek Kullanıcı</label>
+    <label><input type="checkbox" class="feature" value="2" /> Ek Depolama</label>
+</div>
+
+<br />
+
+<label>
+    <input type="checkbox" id="yearly" /> Yıllık Ödeme (%20 indirim)
+</label>
+
+<h3>Toplam: <span id="total">0</span> TL</h3>
+
+<script>
+    $(document).ready(function () {
+
+    $.get('/Subscription/GetPlans', function (data) {
+
+    data.forEach(x => {
+    $('#plan').append(`<option value="${x.id ?? x.Id}">${x.name ?? x.Name}</option>`);
+    });
+
+    calculate();
+    });
+
+    $('#plan, .feature, #yearly').change(function () {
+    calculate();
+    });
+
+    function calculate() {
+
+    var features = [];
+
+    $('.feature:checked').each(function () {
+    features.push(parseInt($(this).val()));
+    });
+
+    $.ajax({
+    url: '/Subscription/CalculateTotal',
+    type: 'POST',
+    data: {
+    planId: $('#plan').val(),
+    featureIds: features,
+    yearly: $('#yearly').is(':checked')
+    },
+    success: function (res) {
+    $('#total').text(res + " TL");
+    },
+    error: function (err) {
+    console.log(err);
+    }
+    });
+    }
+
+    });
+</script>
