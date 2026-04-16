@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Payment";
+}
+
+<h2>Ödeme Ekranı</h2>
+
+<input type="text" id="cardNumber" placeholder="Kart Numarası" class="form-control" />
+
+<br />
+
+<button id="getInstallments" class="btn btn-primary">Taksitleri Getir</button>
+
+<br />
+<br />
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Taksit</th>
+            <th>Oran</th>
+        </tr>
+    </thead>
+    <tbody id="installmentsTable"></tbody>
+</table>
+
+<br />
+
+<button id="payNow" class="btn btn-success">Ödeme Yap</button>
+
+<h3 id="result"></h3>
+
+<!-- 💥 PAYMENT STATUS UI -->
+<div id="paymentStatus" class="alert alert-info mt-3" style="display:none;"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+    // 🔥 TAKSİT GETİR
+    $('#getInstallments').click(function () {
+
+    $.post('/Payment/GetInstallments', {
+    cardNumber: $('#cardNumber').val()
+    }, function (data) {
+
+    $('#installmentsTable').html('');
+
+    if (!data || !data.installments) {
+    $('#installmentsTable').html('<tr><td colspan="2">Veri bulunamadı</td></tr>');
+    return;
+    }
+
+    data.installments.forEach(x => {
+    $('#installmentsTable').append(`
+    <tr>
+    <td>${x.count}</td>
+    <td>${x.rate}</td>
+    </tr>
+    `);
+    });
+
+    });
+
+    });
+
+    // 💳 ÖDEME YAP
+    $('#payNow').click(function () {
+
+    let amount = 100;
+
+    $.post('/Payment/Pay', { amount: amount }, function (res) {
+
+    if (!res) return;
+
+    if (res.success) {
+    $('#result').html("✅ Ödeme Başarılı");
+    } else {
+    $('#result').html("❌ Ödeme Başarısız");
+    }
+
+    // 💥 PAYMENT DETAIL PANEL
+    $('#paymentStatus')
+    .show()
+    .html(
+    "<b>OrderId:</b> " + res.orderId + "<br>" +
+    "<b>Hash:</b> " + res.hash + "<br>" +
+    "<b>Amount:</b> " + amount + "<br>" +
+    "<b>Status:</b> " + (res.success ? "SUCCESS" : "FAILED")
+    );
+
+    });
+
+    });
+
+    });
+</script>
